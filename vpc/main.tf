@@ -15,7 +15,7 @@ resource "aws_internet_gateway" "gw" {
     Name = var.igw
   }
 }
-
+# EIP FOR NAT GATEWAY
 resource "aws_eip" "main" {
   domain = "vpc"
 
