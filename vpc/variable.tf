@@ -19,7 +19,6 @@ variable "public_subnet_cidrs" {
 variable "availability_zones" {
   description = "List of availability zones for the subnets"
   type        = list(string)
-  default = ["us-east-2a", "us-east-2b"]
 }
 variable "private_subnet_cidrs" {
   description = "List of CIDR blocks for private subnets"

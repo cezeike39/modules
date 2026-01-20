@@ -1,17 +1,15 @@
 resource "aws_eks_cluster" "eks_cluster" {
   name    = var.cluster_name
   version = "1.31"
-
-  access_config {
-    authentication_mode = "API"
-  }
+  
 
   role_arn = aws_iam_role.cluster.arn
 
   vpc_config {
     subnet_ids              = var.subnet_ids
     endpoint_private_access = true
-    endpoint_public_access  = false
+    endpoint_public_access  = true
+    public_access_cidrs = ["0.0.0.0/0"]
   }
 
   depends_on = [
@@ -68,13 +66,13 @@ resource "aws_eks_node_group" "main" {
   subnet_ids      = var.subnet_ids
 
   scaling_config {
-    desired_size = 1
-    max_size     = 2
-    min_size     = 1
+    desired_size = var.desired_size
+    max_size     = var.max_size
+    min_size     = var.min_size
   }
 
   update_config {
-    max_unavailable = 1
+    max_unavailable = var.min_size
   }
 
   instance_types = var.instance_types

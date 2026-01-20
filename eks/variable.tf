@@ -38,7 +38,7 @@ variable "node_group_name" {
 variable "instance_types" {
     description = "The instance types for the EKS Node Group"
     type        = list(string)
-    default = ["t2.micro"]
+    default = ["t2.large"]
   
 }
 variable "desired_size" {
