@@ -1,7 +1,7 @@
 output "eks_cluster_id" {
   description = "The ID of the EKS Cluster"
   value       = aws_eks_cluster.eks_cluster.id
-  
+
 }
 output "eks_cluster_endpoint" {
   description = "The endpoint of the EKS Cluster"

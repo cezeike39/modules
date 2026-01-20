@@ -1,7 +1,7 @@
 resource "aws_eks_cluster" "eks_cluster" {
   name    = var.cluster_name
   version = "1.31"
-  
+
 
   role_arn = aws_iam_role.cluster.arn
 
@@ -9,7 +9,7 @@ resource "aws_eks_cluster" "eks_cluster" {
     subnet_ids              = var.subnet_ids
     endpoint_private_access = true
     endpoint_public_access  = true
-    public_access_cidrs = ["0.0.0.0/0"]
+    public_access_cidrs     = ["0.0.0.0/0"]
   }
 
   depends_on = [
