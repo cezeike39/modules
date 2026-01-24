@@ -47,8 +47,10 @@ The infrastructure includes:
 └── eks/
     ├── main.tf
     └── variables.tf
+```
 
-# Example terraform.auto.tfvars file
+## Example terraform.auto.tfvars file
+```hcl
 vpc_name             = "my-vpc"
 cidr_block           = "10.0.0.0/16"
 
@@ -75,8 +77,9 @@ instance_types       = ["t2.large"]
 desired_size         = 1
 min_size             = 1
 max_size             = 3
+```
 
-#Input Variables
+## Input Variables
 
 | Variable             | Description                         |
 | -------------------- | ----------------------------------- |
@@ -100,10 +103,11 @@ max_size             = 3
 | min_size             | Minimum node count                  |
 | max_size             | Maximum node count                  |
 
-# Root main.tf
+## Root main.tf
 
-# The root main.tf wires the modules together:
+The root main.tf wires the modules together:
 
+```hcl
 module "vpc" {
   source               = "./vpc"
   vpc_name             = var.vpc_name
@@ -134,3 +138,4 @@ module "eks" {
 
   depends_on        = [module.vpc]
 }
+```
