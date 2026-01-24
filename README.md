@@ -1,62 +1,133 @@
-# Terraform Module: VPC + EKS
+# Terraform VPC and EKS Infrastructure
 
-This Terraform module provisions a **networking layer (VPC)** and an **Amazon EKS cluster** with managed nodes. The **VPC module** handles all networking resources, while the **EKS module** creates the cluster, managed node groups, and IAM roles.  
-
-This setup allows you to deploy a production-ready Kubernetes cluster with private subnets and secure networking.
+This repository provisions a complete AWS infrastructure using Terraform, including a Virtual Private Cloud (VPC) and an Amazon EKS cluster with a managed node group.
 
 ---
 
-## Features
+## Architecture Overview
 
-### VPC Module
-- Creates a **VPC** with a configurable CIDR block
-- Creates **public and private subnets**
-- Creates an **Internet Gateway (IGW)**
-- Allocates an **Elastic IP (EIP)** for NAT Gateway
-- Creates a **NAT Gateway** for private subnets
-- Creates **route tables** and associates them with subnets
+The infrastructure includes:
 
-### EKS Module
-- Provisions an **Amazon EKS cluster**
-- Creates **managed node groups** with configurable scaling
-- Sets up **IAM roles** for the cluster and nodes
-- Allows **private endpoint access** to the cluster
-- Requires **VPC ID and subnet IDs** from the VPC module
+### VPC
+- Custom VPC
+- Public and private subnets across multiple Availability Zones
+- Internet Gateway
+- NAT Gateway with Elastic IP
+- Public and private route tables and associations
+
+### EKS
+- EKS cluster
+- IAM role for the EKS control plane
+- Managed node group
+- Configurable Kubernetes version and autoscaling settings
 
 ---
 
-## Usage
+## Prerequisites
 
-### Example: Deploy VPC + EKS
+- Terraform >= 1.5
+- AWS CLI installed and configured
+- AWS credentials with sufficient permissions
+- An AWS account
 
-```hcl
-# VPC Module
+---
+
+## Project Structure
+
+```text
+.
+├── main.tf
+├── provider.tf
+├── variables.tf
+├── terraform.tfvars
+├── vpc/
+│   ├── main.tf
+│   ├── variables.tf
+│   └── outputs.tf
+└── eks/
+    ├── main.tf
+    └── variables.tf
+
+# Example terraform.auto.tfvars file
+vpc_name             = "my-vpc"
+cidr_block           = "10.0.0.0/16"
+
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.3.0/24", "10.0.4.0/24"]
+
+availability_zones   = ["us-west-2a", "us-west-2b"]
+
+igw                  = "my-igw"
+eip                  = "my-elastic-ip"
+nat_gateway          = "my-nat-gateway"
+
+public_route_cidr    = "0.0.0.0/0"
+private_route_cidr   = "0.0.0.0/0"
+
+cluster_name         = "my-eks-cluster"
+cluster_role_name    = "ClusterIamrole"
+eks_version          = "1.31"
+
+node_group_name      = "eks-node-group"
+node_role_name       = "NodeIamrole"
+instance_types       = ["t2.large"]
+
+desired_size         = 1
+min_size             = 1
+max_size             = 3
+
+| Variable             | Description                         |
+| -------------------- | ----------------------------------- |
+| vpc_name             | Name of the VPC                     |
+| cidr_block           | CIDR block for the VPC              |
+| public_subnet_cidrs  | CIDR blocks for public subnets      |
+| private_subnet_cidrs | CIDR blocks for private subnets     |
+| availability_zones   | Availability Zones for subnets      |
+| igw                  | Internet Gateway name               |
+| eip                  | Elastic IP for NAT Gateway          |
+| nat_gateway          | NAT Gateway name                    |
+| public_route_cidr    | Public route CIDR                   |
+| private_route_cidr   | Private route CIDR                  |
+| cluster_name         | EKS cluster name                    |
+| cluster_role_name    | IAM role name for EKS cluster       |
+| eks_version          | Kubernetes version                  |
+| node_group_name      | EKS node group name                 |
+| node_role_name       | IAM role name for worker nodes      |
+| instance_types       | EC2 instance types for worker nodes |
+| desired_size         | Desired number of nodes             |
+| min_size             | Minimum node count                  |
+| max_size             | Maximum node count                  |
+# Root main.tf
+
+# The root main.tf wires the modules together:
+
 module "vpc" {
-  source  = "./modules/vpc"
-  vpc_name = "my-vpc"
-  cidr_block = "10.0.0.0/16"
-
-  public_subnet_cidrs  = ["10.0.0.0/24", "10.0.1.0/24"]
-  private_subnet_cidrs = ["10.0.2.0/24", "10.0.3.0/24"]
-  availability_zones   = ["us-east-1a", "us-east-1b"]
-
-  igw         = "my-igw"
-  eip         = "my-eip"
-  nat_gateway = "my-nat-gateway"
+  source               = "./vpc"
+  vpc_name             = var.vpc_name
+  cidr_block           = var.cidr_block
+  availability_zones   = var.availability_zones
+  public_subnet_cidrs  = var.public_subnet_cidrs
+  private_subnet_cidrs = var.private_subnet_cidrs
+  igw                  = var.igw
+  public_route_cidr    = var.public_route_cidr
+  private_route_cidr   = var.private_route_cidr
+  eip                  = var.eip
+  nat_gateway          = var.nat_gateway
 }
 
-# EKS Module
 module "eks" {
-  source = "./modules/eks"
+  source            = "./eks"
+  vpc_id            = module.vpc.vpc_id
+  subnet_ids        = module.vpc.private_subnet_ids
+  cluster_name      = var.cluster_name
+  eks_version       = var.eks_version
+  node_role_name    = var.node_role_name
+  cluster_role_name = var.cluster_role_name
+  node_group_name   = var.node_group_name
+  instance_types    = var.instance_types
+  desired_size      = var.desired_size
+  max_size          = var.max_size
+  min_size          = var.min_size
 
-  cluster_name       = "my-cluster"
-  cluster_role_name  = "my-cluster-role"
-  node_role_name     = "my-node-role"
-  node_group_name    = "workers"
-  instance_types     = ["t3.medium"]
-
-  vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnet_ids
-
-  depends_on = [module.vpc]
+  depends_on        = [module.vpc]
 }
