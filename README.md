@@ -76,6 +76,8 @@ desired_size         = 1
 min_size             = 1
 max_size             = 3
 
+#Input Variables
+
 | Variable             | Description                         |
 | -------------------- | ----------------------------------- |
 | vpc_name             | Name of the VPC                     |
@@ -97,6 +99,7 @@ max_size             = 3
 | desired_size         | Desired number of nodes             |
 | min_size             | Minimum node count                  |
 | max_size             | Maximum node count                  |
+
 # Root main.tf
 
 # The root main.tf wires the modules together:
